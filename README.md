@@ -64,14 +64,16 @@ RATE_LIMIT_WINDOW=60
 ### **3\. Initialize Modules**
 
 If you haven't already, initialize Go modules for each service:  
+```
 cd gateway && go mod tidy && cd ..  
 cd auth-service && go mod tidy && cd ..  
 cd order-service && go mod tidy && cd ..
+```
 
 ## **▶️ How to Run**
 
 Start the entire stack using Docker Compose:  
-docker-compose up \--build
+`docker-compose up --build`
 
 This will start:
 
@@ -84,27 +86,32 @@ This will start:
 ## **🧪 API Endpoints**
 
 ### **1\. Register (Auth Service)**
-
+```
 curl \-X POST http://localhost:3000/auth/register \\  
  \-H "Content-Type: application/json" \\  
  \-d '{"email": "newuser@example.com", "password": "password123"}'
+```
 
 ### **2\. Login (Auth Service)**
 
 _Default Admin: admin@example.com / password_  
+```
 curl \-X POST http://localhost:3000/auth/login \\  
  \-H "Content-Type: application/json" \\  
  \-d '{"email": "admin@example.com", "password": "password"}'
+```
 
 _Copy the token from the response._
 
 ### **3\. Create Order (Order Service)**
 
 _Requires Bearer Token. Replace \<UUID\> with a valid User ID from your DB._  
+```
 curl \-X POST http://localhost:3000/orders \\  
  \-H "Authorization: Bearer \<YOUR_TOKEN\>" \\  
  \-H "Content-Type: application/json" \\  
  \-d '{"user_id": "\<UUID_FROM_DB\>", "product_id": 101}'
+```
 
 ### **4\. Legacy Monolith Fallback**
 
