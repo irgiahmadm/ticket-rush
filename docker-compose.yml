@@ -1,0 +1,43 @@
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  monolith-service:
+    image: jmalloc/echo-server
+    environment:
+      PORT: 8080
+    ports:
+      - "8080:8080"
+
+  # Service key is now 'auth-service' (matches folder name)
+  auth-service:
+    build: ./auth-service
+    env_file:
+      - ./auth-service/.env
+    ports:
+      - "3001:3001"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Service key is now 'order-service' (matches folder name)
+  order-service:
+    build: ./order-service
+    env_file:
+      - ./order-service/.env
+    ports:
+      - "3002:3002"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  gateway:
+    build: ./gateway
+    env_file:
+      - ./gateway/.env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-service
+      - order-service
+      - redis
