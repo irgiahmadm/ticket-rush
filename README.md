@@ -42,12 +42,15 @@ Ensure your local PostgreSQL is running and accessible.
 
 Each service has its own .env file. Ensure DATABASE_URL points to host.docker.internal.  
 **auth-service/.env & order-service/.env:**  
+```
 PORT=3001 \# (3002 for order-service)  
 \# Replace 'postgres:password' with your local DB credentials  
 DATABASE_URL=postgres://postgres:yourpassword@host.docker.internal:5432/ticketrush?sslmode=disable  
 JWT_SECRET=supersecretkey
+```
 
 **gateway/.env:**  
+```
 PORT=3000  
 REDIS_ADDR=redis:6379  
 JWT_SECRET=supersecretkey  
@@ -56,6 +59,7 @@ ORDER_SERVICE_URL=http://order-service:3002
 MONOLITH_URL=http://monolith_service:8080  
 RATE_LIMIT_REQ=10  
 RATE_LIMIT_WINDOW=60
+```
 
 ### **3\. Initialize Modules**
 
