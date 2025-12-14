@@ -29,8 +29,8 @@ func main() {
 
 	// Dependency Injection (Hexagonal Wiring)
 	repo := repository.NewPostgresRepo(dbPool)
-	svc := services.NewService(repo)
-	h := handler.NewHandler(svc)
+	svc := services.NewOrderService(repo)
+	h := handler.NewOrderHandler(svc)
 
 	r := gin.Default()
 	r.POST("/orders", response.Wrap(h.CreateOrder))

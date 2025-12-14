@@ -1,0 +1,11 @@
+# Ignore Git history
+.git
+
+# Ignore local compilations
+main
+*.exe
+bin/
+
+# Ignore IDE settings
+.vscode
+.idea

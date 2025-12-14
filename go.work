@@ -4,4 +4,6 @@ use (
 	./auth-service
 	./gateway
 	./order-service
+	./event-service
+	./payment-service
 )

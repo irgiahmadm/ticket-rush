@@ -8,7 +8,7 @@ import (
 )
 
 type JWTGenerator struct {
-	secret string
+  secret string
 }
 
 func NewJWTGenerator(secret string) *JWTGenerator {
@@ -17,8 +17,8 @@ func NewJWTGenerator(secret string) *JWTGenerator {
 
 func (j *JWTGenerator) GenerateToken(user *domain.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.ID,
-		"exp": time.Now().Add(24 * time.Hour).Unix(),
+			"sub": user.ID,
+			"exp": time.Now().Add(24 * time.Hour).Unix(),
 	})
 	return token.SignedString([]byte(j.secret))
 }

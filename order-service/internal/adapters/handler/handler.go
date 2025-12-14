@@ -11,7 +11,7 @@ type Handler struct {
 	svc ports.OrderService
 }
 
-func NewHandler(svc ports.OrderService) *Handler {
+func NewOrderHandler(svc ports.OrderService) *Handler {
 	return &Handler{svc: svc}
 }
 

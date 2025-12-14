@@ -6,19 +6,20 @@ import (
 	"context"
 	"errors"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type Service struct {
+type AuthService struct {
 	repo ports.UserRepository
 	tokenGen ports.TokenGenerator
 }
 
-func NewAuthService(repo ports.UserRepository, tokenGen ports.TokenGenerator) *Service {
-	return &Service{repo: repo, tokenGen: tokenGen}
+func NewAuthService(repo ports.UserRepository, tokenGen ports.TokenGenerator) *AuthService {
+	return &AuthService{repo: repo, tokenGen: tokenGen}
 }
 
-func (s *Service) Login(ctx context.Context, email, password string) (string, error) {
+func (s *AuthService) Login(ctx context.Context, email, password string) (string, error) {
 	// 1. Fetch User (Password in DB is hashed)
 	user, err := s.repo.FindByEmail(ctx, email)
 	if err != nil {
@@ -35,7 +36,7 @@ func (s *Service) Login(ctx context.Context, email, password string) (string, er
 	return s.tokenGen.GenerateToken(user)
 }
 
-func (s *Service) Register(ctx context.Context, email, password string) error {
+func (s *AuthService) Register(ctx context.Context, email, password string) error {
 	// 1. Hash Password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -48,4 +49,8 @@ func (s *Service) Register(ctx context.Context, email, password string) error {
 	}
 
 	return s.repo.Save(ctx, user)
+}
+
+func (s *AuthService) GetUser(ctx context.Context, id uuid.UUID) (domain.User, error) {
+    return s.repo.FindByID(ctx, id)
 }

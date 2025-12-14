@@ -18,25 +18,26 @@ func main() {
     cfg, err := config.LoadConfig()
     if err != nil { log.Fatal("Config error:", err) }
 
-    // 1. Infrastructure (PGX Pool)
+    // Infrastructure (PGX Pool)
     dbPool, err := pgxpool.New(context.Background(), cfg.DatabaseURL)
     if err != nil { log.Fatal("Unable to connect to database:", err) }
     defer dbPool.Close()
 
-    // 2. Driven Adapters (Outbound)
-    repo := repository.NewPostgresRepo(dbPool)
+    // Driven Adapters (Outbound)
+    repo := repository.NewPostgresUserRepository(dbPool)
     tokenGen := token.NewJWTGenerator(cfg.JWTSecret)
 
-    // 3. Core Service
+    // Core Service
     svc := services.NewAuthService(repo, tokenGen)
 
-    // 4. Driving Adapter (Inbound)
-    h := handler.NewHandler(svc)
+    // Driving Adapter (Inbound)
+    h := handler.NewAuthHandler(svc)
 
-    // 5. Framework
+    // Framework
     r := gin.Default()
     r.POST("/login", response.Wrap(h.Login))
     r.POST("/register", response.Wrap(h.Register))
+    r.GET("/me", response.Wrap(h.Me))
 
     r.Run(":" + cfg.Port)
 }

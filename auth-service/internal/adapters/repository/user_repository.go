@@ -5,19 +5,20 @@ import (
 	"context"
 	"errors"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type PostgresRepo struct {
+type PostgresUserRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewPostgresRepo(db *pgxpool.Pool) *PostgresRepo {
-	return &PostgresRepo{db: db}
+func NewPostgresUserRepository(db *pgxpool.Pool) *PostgresUserRepository {
+	return &PostgresUserRepository{db: db}
 }
 
-func (r *PostgresRepo) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
+func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
 	query := "SELECT id, email, password FROM users WHERE email = $1"
 
 	var user domain.User
@@ -32,8 +33,14 @@ func (r *PostgresRepo) FindByEmail(ctx context.Context, email string) (*domain.U
 	return &user, nil
 }
 
-func (r *PostgresRepo) Save(ctx context.Context, user domain.User) error {
+func (r *PostgresUserRepository) Save(ctx context.Context, user domain.User) error {
 	query := "INSERT INTO users (email, password) VALUES ($1, $2)"
 	_, err := r.db.Exec(ctx, query, user.Email, user.Password)
 	return err
+}
+
+func (r *PostgresUserRepository) FindByID(ctx context.Context, id uuid.UUID) (domain.User, error) {
+    var u domain.User
+    err := r.db.QueryRow(ctx, "SELECT id, email, password FROM users WHERE id=$1", id).Scan(&u.ID, &u.Email, &u.Password)
+    return u, err
 }

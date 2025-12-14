@@ -10,7 +10,7 @@ type Service struct {
 	repo ports.OrderRepository
 }
 
-func NewService(repo ports.OrderRepository) *Service {
+func NewOrderService(repo ports.OrderRepository) *Service {
 	return &Service{repo: repo}
 }
 
