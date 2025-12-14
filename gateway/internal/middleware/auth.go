@@ -39,9 +39,9 @@ func AuthMiddleware(secret string) func(http.Handler) http.Handler {
             }
 
             // STRATEGY IMPLEMENTATION: Identity Propagation
-            // Extract user_id from claims
+            // Extract sub from claims
             if claims, ok := token.Claims.(jwt.MapClaims); ok {
-                if userID, ok := claims["user_id"].(string); ok {
+                if userID, ok := claims["sub"].(string); ok {
                     // Inject into header for downstream services
                     r.Header.Set("X-User-ID", userID)
                 }

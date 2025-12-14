@@ -2,6 +2,7 @@ package handler
 
 import (
 	"auth-service/internal/core/ports"
+	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -40,6 +41,8 @@ func (h *AuthHandler) Me(c *gin.Context) (int, string, interface{}) {
     uidStr := c.GetHeader("X-User-ID")
     if uidStr == "" { return 401, "Invalid User", nil }
     uid, _ := uuid.Parse(uidStr)
+
+    log.Printf("Fetching user with ID: %s", uid.String())
     
     user, err := h.svc.GetUser(c.Request.Context(), uid)
     if err != nil { return 404, "User not found", nil }

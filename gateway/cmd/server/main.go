@@ -6,7 +6,6 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	"gateway/internal/config"
 	"gateway/internal/middleware"
 
 	"github.com/go-chi/chi"
@@ -15,43 +14,35 @@ import (
 )
 
 func main() {
-    cfg, err := config.LoadConfig()
-    if err != nil { log.Fatal(err) }
-
-    rdb := redis.NewClient(&redis.Options{Addr: cfg.RedisAddr})
+    viper.SetConfigFile(".env"); viper.AutomaticEnv(); viper.ReadInConfig()
     r := chi.NewRouter()
+    rdb := redis.NewClient(&redis.Options{Addr: viper.GetString("REDIS_ADDR")})
 
-    // GLOBAL MIDDLEWARE: Header Sanitization
-    // This runs on EVERY request to ensure no attacker can inject trusted headers.
-    r.Use(func(next http.Handler) http.Handler {
+    // 1. Global Middleware
+    r.Use(func(next http.Handler) http.Handler { 
         return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-            // Strip headers that are meant to be internal-only
-            r.Header.Del("X-User-ID")
+            r.Header.Del("X-User-ID") // Sanitizer
             next.ServeHTTP(w, r)
         })
     })
+    r.Use(middleware.RateLimiter(rdb, 100, 60))
 
-    r.Use(middleware.RateLimiter(rdb, cfg.RateLimitReq, cfg.RateLimitWindow))
-
-    // Public Routes
-    r.Mount("/auth/login", proxy(viper.GetString("AUTH_SERVICE_URL") + "/login"))
-    r.Mount("/auth/register", proxy(viper.GetString("AUTH_SERVICE_URL") + "/register"))
+    // 2. Public Routes
+    r.Mount("/auth/login", http.StripPrefix("/auth", proxy(viper.GetString("AUTH_SERVICE_URL"))))
+    r.Mount("/auth/register", http.StripPrefix("/auth", proxy(viper.GetString("AUTH_SERVICE_URL"))))
     r.Mount("/events", proxy(viper.GetString("EVENT_SERVICE_URL")))
-    r.Mount("/events", proxy(cfg.EventServiceURL))
     
-    // Protected Routes (Apply Auth Middleware)
-    r.Group(func(protected chi.Router) {
-        protected.Use(middleware.AuthMiddleware(cfg.JWTSecret))
-        
-        // Route to Order Service (Flash Sale)
-        protected.Mount("/orders", proxy(cfg.OrderServiceURL))
-        protected.Mount("/book", proxy(cfg.OrderServiceURL)) // Direct mapping for /book if needed
-        protected.Mount("/legacy", proxy(cfg.MonolithURL))
-        protected.Mount("/users", proxy(cfg.MonolithURL)) 
+    // 3. Protected Routes
+    r.Group(func(p chi.Router) {
+        p.Use(middleware.AuthMiddleware(viper.GetString("JWT_SECRET")))
+        p.Mount("/auth/me", http.StripPrefix("/auth", proxy(viper.GetString("AUTH_SERVICE_URL"))))
+        p.Post("/book", func(w http.ResponseWriter, req *http.Request) {
+            target, _ := url.Parse(viper.GetString("ORDER_SERVICE_URL"))
+            proxy := httputil.NewSingleHostReverseProxy(target); proxy.ServeHTTP(w, req)
+        })
     })
-
-    log.Printf("Gateway running on :%s", cfg.Port)
-    http.ListenAndServe(":"+cfg.Port, r)
+    log.Println("Gateway on :" + viper.GetString("PORT"))
+    http.ListenAndServe(":"+viper.GetString("PORT"), r)
 }
 
 func proxy(target string) http.HandlerFunc {

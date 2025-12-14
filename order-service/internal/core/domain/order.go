@@ -1,8 +1,11 @@
 package domain
 
+import "github.com/google/uuid"
+
 type Order struct {
-	ID        int    `json:"id"`
-	UserID    string `json:"user_id"`
-	ProductID int    `json:"product_id"`
-	Status    string `json:"status"`
+	ID      int
+	UserID  uuid.UUID
+	EventID int
+	SeatID  string
+	Status  string
 }
